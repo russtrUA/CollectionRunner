@@ -15,3 +15,13 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+.vscode/settings.json
+.settings/org.springframework.ide.eclipse.prefs
+.settings/org.eclipse.m2e.core.prefs
+.settings/org.eclipse.jdt.core.prefs
+.settings/org.eclipse.jdt.apt.core.prefs
+.settings/org.eclipse.core.resources.prefs
+.mvn/wrapper/maven-wrapper.properties
+HELP.md
+mvnw
+mvnw.cmd

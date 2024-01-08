@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вкладки Bootstrap без jQuery</title>
+  <!-- Підключення Bootstrap CSS та JavaScript -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+  <ul class="nav nav-tabs" id="myTabs">
+    <li class="nav-item">
+      <a class="nav-link active" id="tab1" data-toggle="tab" href="#content1">Вкладка 1</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab2" data-toggle="tab" href="#content2">Вкладка 2</a>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-2">
+    <div class="tab-pane fade show active" id="content1">
+      <p>Вміст вкладки 1.</p>
+    </div>
+    <div class="tab-pane fade" id="content2">
+      <p>Вміст вкладки 2.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Активація вкладок за допомогою JavaScript
+document.getElementById('tab1').addEventListener('click', function() {
+  document.getElementById('myTabs').querySelector('.active').classList.remove('active');
+  document.getElementById('content1').classList.add('show', 'active');
+});
+
+document.getElementById('tab2').addEventListener('click', function() {
+  document.getElementById('myTabs').querySelector('.active').classList.remove('active');
+  document.getElementById('content2').classList.add('show', 'active');
+});
+</script>
+
+<!-- Підключення Bootstrap JavaScript та Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.9/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+</body>
+</html>

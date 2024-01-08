@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Стилі для action menu */
+        .action-menu {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            z-index: 1000;
+        }
+
+        /* Стилі для кнопки і трьох точок */
+        .action-button {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .dots {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: #333;
+            margin: 2px 2px;
+        }
+    </style>
+    <title>Action Menu Example</title>
+</head>
+<body>
+
+    <!-- Кнопка, яка виглядає як трійка точок поруч із ссилкою -->
+    <a href="#" class="action-button" id="actionButton">
+        <div class="dots"></div>
+        <div class="dots"></div>
+        <div class="dots"></div>
+    </a>
+
+    <!-- Action menu -->
+    <div id="actionMenu" class="action-menu">
+        <ul>
+            <li><a href="#" onclick="handleAction('action1')">Дія 1</a></li>
+            <li><a href="#" onclick="handleAction('action2')">Дія 2</a></li>
+            <li><a href="#" onclick="handleAction('action3')">Дія 3</a></li>
+        </ul>
+    </div>
+
+    <script>
+        // Функція, яка викликається при виборі елемента action menu
+        function handleAction(action) {
+            alert("Ви вибрали дію: " + action);
+            // Тут можна викликати необхідний код для обробки дії
+        }
+
+        // Додавання обробника події для кнопки
+        document.getElementById('actionButton').addEventListener('click', function(event) {
+            // Отримання елемента action menu
+            var actionMenu = document.getElementById('actionMenu');
+
+            // Перевірка видимості та встановлення змінної видимості
+            var isVisible = (getComputedStyle(actionMenu).display === 'block');
+            actionMenu.style.display = isVisible ? 'none' : 'block';
+
+            event.stopPropagation(); // Зупиняємо подальше спливання подій
+        });
+
+        // Додавання обробника події для документу, щоб ховати action menu при кліку в іншому місці
+        document.addEventListener('click', function() {
+            var actionMenu = document.getElementById('actionMenu');
+            actionMenu.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>

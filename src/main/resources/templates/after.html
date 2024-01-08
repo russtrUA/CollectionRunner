@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pseudo-element ::before Example</title>
+  <style>
+    /* Стилі для додавання змінного вмісту через ::before */
+    .content::before {
+      content: '\002B'; /* Початковий вміст - "+" */
+      cursor: pointer; /* Змінює вигляд курсора при наведенні */
+    }
+
+    /* Стилі для зміни вмісту при кліку на елемент */
+    .clicked::before {
+      content: '\2212'; /* Змінений вміст - "−" */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Елемент, на якому ми використовуємо псевдоелемент ::before -->
+  <div class="content" onclick="changeContent()">Some text</div>
+
+  <script>
+    function changeContent() {
+      // Отримуємо посилання на елемент
+      var contentElement = document.querySelector('.content');
+
+      // Додаємо або видаляємо клас "clicked" для зміни вмісту через ::before
+      contentElement.classList.toggle('clicked');
+    }
+  </script>
+
+</body>
+</html>

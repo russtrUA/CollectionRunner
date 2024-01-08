@@ -1,0 +1,142 @@
+body {
+    margin: 10px auto 0;
+}
+
+.method {
+    max-width: max-content;
+}
+
+h1 {
+    text-align: center;
+}
+
+#jsonBody {
+    height: 300px;
+    max-width: 90%;
+    resize: none;
+}
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+
+#btnSend {
+    margin-left: 5px;
+    width: 70px;
+}
+
+.btn-save {
+    text-align: right;
+}
+
+#btnSave {
+    width: 70px;
+}
+
+div.list-group> :first-child {
+    margin-top: 0.8rem;
+}
+#collectionsList > li {
+    padding: 0;
+}
+
+#collections {
+    margin-top: 110px;
+}
+
+#request-name {
+    padding: 5px;
+}
+
+a {
+    text-decoration: none;
+}
+
+.hide {
+    display: none;
+}
+
+#response {
+    height: 300px;
+    max-width: 90%;
+    resize: none;
+}
+
+div.list-group-horizontal> :first-child {
+    width: 90%;
+}
+
+.dots {
+    width: 10%;
+    padding: 0 5px;
+    /* margin-top: 0.8rem; */
+}
+
+.request>button {
+    border: none;
+    margin: 0;
+}
+
+.collection {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+.collection-edit:hover {
+    cursor:text;
+}
+
+.collection>button {
+    border: none;
+}
+
+.show-plus::before {
+    content: '\002B';
+    /* Початковий вміст - "+" */
+    cursor: pointer;
+    /* Змінює вигляд курсора при наведенні */
+    margin-right: 10px;
+}
+
+.show-minus::before {
+    content: '\2212';
+    cursor: pointer;
+    /* Змінює вигляд курсора при наведенні */
+    margin-right: 10px;
+}
+
+.action-collection {
+    position: absolute;
+    top: 0;
+    right: 0;
+    list-style-type: none;
+    width: 60%;
+    padding: 3px;
+    background-color: white;
+    z-index: 3;
+}
+
+.action-div {
+    width: 100%;
+    position: relative;
+}
+
+.action-div>ul>li {
+    cursor: pointer;
+}
+
+.run-order {
+    height: 100vh;
+}
+#btn-close-runner {
+    width: 5px;
+    height: 5px;
+}
+#btn-delete-file {
+    width: 5px;
+    height: 5px;
+}
+#btn-run{
+    width: 110px;
+}
