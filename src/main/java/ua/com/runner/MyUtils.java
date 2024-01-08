@@ -4,10 +4,19 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
@@ -64,7 +73,7 @@ public class MyUtils {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
 		return dateFormat.format(new Date());
 	}
-	
+
 	static String fillBody(StringBuilder body, JsonNode vars, JsonNode values)
 			throws JsonMappingException, JsonProcessingException {
 		body = new StringBuilder(body);
@@ -110,7 +119,59 @@ public class MyUtils {
 //		System.out.println(objMapper.writeValueAsString(rootNode));
 		return objMapper.writeValueAsString(rootNode);
 	}
-	
+
+	static void setHTTPSConnectionSettings() {
+		String pfxFilePath = null, pfxPasswordFilePath = null;
+		// Вказати шлях до файлу налаштувань користувача
+		File userConfigFile = new File("user.config");
+		Properties properties = new Properties();
+		try (FileInputStream input = new FileInputStream(userConfigFile)) {
+			properties.load(input);
+			pfxFilePath = properties.getProperty("pfx_file_path");
+			pfxPasswordFilePath = properties.getProperty("pfx_password_path");
+		} catch (IOException ex) {
+			System.out.println("Помилка при зчитуванні файлу налаштувань: " + ex.getMessage());
+		}
+		String pfxPassword = null;
+		try (BufferedReader fileReader = new BufferedReader(new FileReader(pfxPasswordFilePath))) {
+			pfxPassword = fileReader.readLine();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		// Завантаження PFX-файлу та встановлення його як довіреного складу ключів
+		try {
+			KeyStore keyStore = KeyStore.getInstance("PKCS12");
+			keyStore.load(new FileInputStream(pfxFilePath), pfxPassword.toCharArray());
+
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			kmf.init(keyStore, pfxPassword.toCharArray());
+			KeyManager[] kms = kmf.getKeyManagers();
+
+			// Assuming that you imported the CA Cert
+			// to your cacerts Store.
+			KeyStore trustStore = KeyStore.getInstance("JKS");
+			String javaHome = System.getProperty("java.home");
+			String cacertsFilePath = Paths.get(javaHome, "lib", "security", "cacerts").toString();
+			trustStore.load(new FileInputStream(cacertsFilePath), "changeit".toCharArray());
+
+			// Встановлення довіреного складу ключів для TrustManagerFactory
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			tmf.init(trustStore);
+			TrustManager[] tms = tmf.getTrustManagers();
+
+			// Створення SSLContext з TrustManagerFactory
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(kms, tms, new SecureRandom());
+			SSLContext.setDefault(sslContext);
+
+			// Встановлення фабрики сокетів для HttpsURLConnection
+			HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 //	static String[][] getVarsFromFile(String fileWithVars) throws Exception {
 //		try (BufferedReader fileReader = new BufferedReader(new FileReader(fileWithVars))) {
 //			ArrayList<String[]> linesData = new ArrayList<>();

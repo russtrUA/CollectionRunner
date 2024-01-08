@@ -1,10 +1,7 @@
 package ua.com.runner;
 
 import java.io.*;
-import java.net.URI;
-import java.nio.file.Paths;
-import java.security.KeyStore;
-import java.security.SecureRandom;
+import java.net.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -41,45 +38,13 @@ public class MyExecutorService {
 //		this.numThreads = numThreads;
 	}
 
-	private void setConnectionSettings(String pfxFilePath, String pfxPassword) {
-		// Завантаження PFX-файлу та встановлення його як довіреного складу ключів
-		try {
-			KeyStore keyStore = KeyStore.getInstance("PKCS12");
-			keyStore.load(new FileInputStream(pfxFilePath), pfxPassword.toCharArray());
-
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			kmf.init(keyStore, pfxPassword.toCharArray());
-			KeyManager[] kms = kmf.getKeyManagers();
-
-			// Assuming that you imported the CA Cert
-			// to your cacerts Store.
-			KeyStore trustStore = KeyStore.getInstance("JKS");
-			String javaHome = System.getProperty("java.home");
-			String cacertsFilePath = Paths.get(javaHome, "lib", "security", "cacerts").toString();
-			trustStore.load(new FileInputStream(cacertsFilePath), "changeit".toCharArray());
-
-			// Встановлення довіреного складу ключів для TrustManagerFactory
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			tmf.init(trustStore);
-			TrustManager[] tms = tmf.getTrustManagers();
-
-			// Створення SSLContext з TrustManagerFactory
-			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(kms, tms, new SecureRandom());
-			SSLContext.setDefault(sslContext);
-
-			// Встановлення фабрики сокетів для HttpsURLConnection
-			HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	
 
 	public void execute(String config) {
 		// Запам'ятовуємо час старту
 		Instant start = Instant.now();
 		ObjectMapper objectMapper = new ObjectMapper();
-		String pfxFilePath = null, pfxPasswordFilePath = null;
+		
 //		StringBuilder[][] arrayCollection = null;
 		JsonNode requests = null, iterations = null;
 		int numThreads = 1;
@@ -93,25 +58,8 @@ public class MyExecutorService {
 			e.printStackTrace();
 		}
 		logFilePath = "log_" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()) + ".txt";
-		// Вказати шлях до файлу налаштувань користувача
-		File userConfigFile = new File("user.config");
-		Properties properties = new Properties();
-		try (FileInputStream input = new FileInputStream(userConfigFile)) {
-			properties.load(input);
-			pfxFilePath = properties.getProperty("pfx_file_path");
-			pfxPasswordFilePath = properties.getProperty("pfx_password_path");
-		} catch (IOException ex) {
-			System.out.println("Помилка при зчитуванні файлу налаштувань: " + ex.getMessage());
-		}
-		String pfxPassword = null;
-		try (BufferedReader fileReader = new BufferedReader(new FileReader(pfxPasswordFilePath))) {
-			pfxPassword = fileReader.readLine();
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		setConnectionSettings(pfxFilePath, pfxPassword);
+		
+		MyUtils.setHTTPSConnectionSettings();
 //		
 		executorService = Executors.newFixedThreadPool(numThreads);
 		for (int i = 0; i < numThreads; i++) {
@@ -196,7 +144,7 @@ public class MyExecutorService {
 
 		@Override
 		public void run() {
-			HttpsURLConnection con = null;
+			HttpURLConnection con = null;
 			try {
 				int i = threadIndex;
 				do {
@@ -213,10 +161,16 @@ public class MyExecutorService {
 						String request = arrayOfVars.isEmpty() ? runRequest.get("body").toString()
 								: MyUtils.fillBody(new StringBuilder(runRequest.get("body").toString()),
 										arrayOfVars.get(0), arrayOfVars.get(i));
-						System.out.println((!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " " + runRequest.get("method").asText()
-								+ " " + runRequest.get("url").asText() + " Request: " + request);
+						System.out.println((!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
+								+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
+								+ " Request: " + request);
 						// Налаштування HttpsURLConnection
-						con = (HttpsURLConnection) new URI(runRequest.get("url").asText()).toURL().openConnection();
+						URI uri = new URI(runRequest.get("url").asText());
+						if ("http".equals(uri.getScheme())) {
+			                con = (HttpURLConnection) uri.toURL().openConnection();
+			            } else if ("https".equals(uri.getScheme())) {
+			                con = (HttpsURLConnection) uri.toURL().openConnection();
+			            }
 						// Налаштування методу та інших параметрів
 						con.setRequestMethod(runRequest.get("method").asText());
 						con.setRequestProperty("Content-Type", "application/json");
@@ -245,9 +199,11 @@ public class MyExecutorService {
 							}
 
 							// Обробка JSON-відповіді
-							MyUtils.log(logFilePath, arrayOfVars.get(i) + " URL: " + runRequest.get("url").asText()
-									+ " Method: " + runRequest.get("method").asText() + " Request: " + request
-									+ " - Response Code: " + responseCode + "\n" + "Response: " + response.toString());
+							MyUtils.log(logFilePath,
+									(!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
+											+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
+											+ " Request: " + request + " - Response Code: " + responseCode + "\n"
+											+ "Response: " + response.toString());
 							// Перетворюємо JSON-рядок у об'єкт JsonNode
 							ObjectMapper objectMapper = new ObjectMapper();
 							JsonNode jsonNode = objectMapper.readTree(response.toString());
@@ -278,7 +234,7 @@ public class MyExecutorService {
 				e.printStackTrace();
 			} finally {
 				if (con != null) {
-					con.disconnect();	
+					con.disconnect();
 				}
 			}
 		}
