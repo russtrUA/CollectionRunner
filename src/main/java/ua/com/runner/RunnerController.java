@@ -1,8 +1,15 @@
 package ua.com.runner;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.security.Principal;
-import java.util.concurrent.atomic.*;
 import java.util.*;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -10,12 +17,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 @Controller
 public class RunnerController {
-	private static AtomicBoolean isBusy = new AtomicBoolean(false);
-	
+
 	private Map<String, MyExecutorService> collExecutors = Collections.synchronizedMap(new HashMap<>());
-	
+
 	@Autowired
 	private SimpMessagingTemplate messagingTemplate;
 
@@ -26,6 +34,7 @@ public class RunnerController {
 
 	@GetMapping("/load")
 	public @ResponseBody String loadJson() {
+		MyUtils.setHTTPSConnectionSettings();
 		return MyUtils.readFile("collections.json").toString();
 	}
 
@@ -40,50 +49,73 @@ public class RunnerController {
 	}
 
 	@PostMapping("/send-request")
-	public @ResponseBody String sendRequest(@RequestBody String clientRequest) {
+	public @ResponseBody String sendRequest(@RequestBody JsonNode clientRequest) {
 
-		// Тут ви можете виконати логіку взаємодії з API
-		// Наприклад, використовуйте RestTemplate для надсилання запиту
+		HttpURLConnection con = null;
+		StringBuilder response = new StringBuilder();
+		try {
+			String request = clientRequest.get("jsonBody").asText();
+			URI uri = new URI(clientRequest.get("url").asText());
+			if ("http".equals(uri.getScheme())) {
+				con = (HttpURLConnection) uri.toURL().openConnection();
+			} else if ("https".equals(uri.getScheme())) {
+				con = (HttpsURLConnection) uri.toURL().openConnection();
+			}
+			// Налаштування методу та інших параметрів
+			con.setRequestMethod(clientRequest.get("method").asText());
+			con.setRequestProperty("Content-Type", "application/json");
+			// Відправлення даних (якщо потрібно)
+			con.setDoOutput(true);
+			con.setDoInput(true);
+			con.setConnectTimeout(10000);
+			con.setReadTimeout(10000);
+			con.connect();
+			System.out.println(clientRequest.get("url").asText());
+			System.out.println(clientRequest.get("method").asText());
+			System.out.println(request);
+			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+				wr.writeBytes(request);
+				wr.flush();
+			}
 
-		// Припустимо, що ви отримали відповідь в форматі JSON
-//        String apiResponse = "{ \"status\": \"success\", \"message\": \"Request sent successfully\" }";
+			int responseCode = con.getResponseCode();
+			System.out.println("RC: " + responseCode);
+			// Зчитування відповіді
 
-		return clientRequest;
+			try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+				String inputLine;
+
+				while ((inputLine = in.readLine()) != null) {
+					response.append(inputLine);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			con.disconnect();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (con != null) {
+				con.disconnect();
+			}
+		}
+		System.out.println(response.toString());
+		return response.toString();
 	}
 
 	@MessageMapping("/start-executing")
 	public void sendArray(Principal principal, String json) {
 		String username = principal.getName();
-//	     if (!isBusy.get()) {
-		isBusy.set(true);
 		MyExecutorService executor = new MyExecutorService(messagingTemplate, username);
 		collExecutors.put(username, executor);
 		executor.execute(json);
-//	    	 ArrayNode arrayNode = (ArrayNode) jsonNode;
-
-//		     for (int i = 0; i < json.length; i++) {
-//		    	 System.out.println(json[i]);  
-//		    	 messagingTemplate.convertAndSendToUser(username,"/topic/result", "{\"index\":" + i + "}");
-//		         try {
-//					Thread.sleep(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//		     }
-//		     messagingTemplate.convertAndSendToUser(username,"/topic/result", "{\"name\" :\"stop\"}");
-		isBusy.set(false);
-//		} 
-//	     else {
-//	    	 messagingTemplate.convertAndSendToUser(username,"/topic/result", "{\"name\" :\"busy\"}");
-//		}
-
 	}
-	
+
 	@MessageMapping("/stop-executing")
 	public void stopExecuting(Principal principal) {
 		String username = principal.getName();
 		collExecutors.get(username).stop();
 		collExecutors.remove(username);
 	}
-	
+
 }

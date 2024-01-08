@@ -70,15 +70,9 @@ window.addEventListener("load", function () {
         });
     }
     function connect() {
-        //var socket = new SockJS('ws://localhost:8080/ws');
-        //stompClient = Stomp.over(socket);
         stompClient.activate();
-
-
-        // Send the JSON array to the server
-        //stompClient.send("/app/sendArray", {}, JSON.stringify(jsonArray));
     }
-    // var 
+
     function isUrlValid(str) {
         const pattern = new RegExp(
             '^(https?:\\/\\/)?' + // protocol
@@ -141,7 +135,7 @@ window.addEventListener("load", function () {
         })
             .then(response => response.json())
             .then(data => {
-                gResponse.value = data.jsonBody;
+                gResponse.value = JSON.stringify(data, null, 4);
             });
     }
     function saveToFile(jsonData) {
@@ -779,7 +773,6 @@ window.addEventListener("load", function () {
                     gVars.push(vars);
                 })
                 btn_Run.disabled = false;
-                // console.dir(iterationsDiv);
             };
             // Прочитати файл як текст
             reader.readAsText(file);
@@ -806,7 +799,6 @@ window.addEventListener("load", function () {
     })
     btn_delFile.addEventListener("click", () => {
         fileVars.value = '';
-        // console.dir(fileVars); 
         btn_delFile.classList.add("hide");
         iterationsDiv.classList.add("hide");
         glines = null;

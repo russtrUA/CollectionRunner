@@ -59,7 +59,7 @@ public class MyExecutorService {
 		}
 		logFilePath = "log_" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()) + ".txt";
 		
-		MyUtils.setHTTPSConnectionSettings();
+//		MyUtils.setHTTPSConnectionSettings();
 //		
 		executorService = Executors.newFixedThreadPool(numThreads);
 		for (int i = 0; i < numThreads; i++) {
