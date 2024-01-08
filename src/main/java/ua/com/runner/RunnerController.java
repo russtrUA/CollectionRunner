@@ -109,6 +109,9 @@ public class RunnerController {
 		MyExecutorService executor = new MyExecutorService(messagingTemplate, username);
 		collExecutors.put(username, executor);
 		executor.execute(json);
+		if (collExecutors.get(username) != null) {
+			collExecutors.remove(username);
+		} 
 	}
 
 	@MessageMapping("/stop-executing")

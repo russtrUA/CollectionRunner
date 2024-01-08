@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark"
-    xmlns="http://www.w3.org/1999/xhtml" 
-    xmlns:th="http://www.thymeleaf.org" 
+<html lang="en" data-bs-theme="dark" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 
@@ -166,6 +164,10 @@
                                         </div>
                                     </div>
                                     <button type="button" id="btn-run" class="btn btn-primary mt-3">Run</button>
+                                    <div id="results" class="hide mt-1">
+                                        <h5>Results:</h5>
+                                        <textarea class="form-control" disabled></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>

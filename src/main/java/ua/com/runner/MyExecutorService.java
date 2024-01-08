@@ -24,11 +24,11 @@ public class MyExecutorService {
 
 	private ExecutorService executorService;
 //	private int numThreads;
-	private static List<Integer> responseCodes = Collections.synchronizedList(new ArrayList<>());
-	private static String logFilePath;
-	private static AtomicInteger passed = new AtomicInteger(0);
-	private static AtomicInteger failed = new AtomicInteger(0);
-	private static int delay = 0;
+	private List<Integer> responseCodes = Collections.synchronizedList(new ArrayList<>());
+	private String logFilePath;
+	private AtomicInteger passed = new AtomicInteger(0);
+	private AtomicInteger failed = new AtomicInteger(0);
+	private int delay = 0;
 	private String userName;
 
 	public MyExecutorService(SimpMessagingTemplate messagingTemplate, String userName) {
@@ -38,13 +38,13 @@ public class MyExecutorService {
 //		this.numThreads = numThreads;
 	}
 
-	
-
 	public void execute(String config) {
 		// Запам'ятовуємо час старту
+		System.out.println("Passed (start): " + passed.get() + ", Failed(start): " + failed.get());
+		System.out.println(this.userName);
 		Instant start = Instant.now();
 		ObjectMapper objectMapper = new ObjectMapper();
-		
+
 //		StringBuilder[][] arrayCollection = null;
 		JsonNode requests = null, iterations = null;
 		int numThreads = 1;
@@ -58,7 +58,7 @@ public class MyExecutorService {
 			e.printStackTrace();
 		}
 		logFilePath = "log_" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()) + ".txt";
-		
+
 //		MyUtils.setHTTPSConnectionSettings();
 //		
 		executorService = Executors.newFixedThreadPool(numThreads);
@@ -72,7 +72,8 @@ public class MyExecutorService {
 				Thread.sleep(1000);
 				if (!isInterrupted) {
 					messagingTemplate.convertAndSendToUser(userName, "/topic/result",
-							"{\"body\":{\"status\":\"running\"}}");
+							"{\"body\":{\"status\":\"running\",\"passed\":" + passed.get() + ", \"failed\":"
+									+ failed.get() + "}}");
 				}
 				System.out.println("Passsed: " + passed.get() + "; Failed: " + failed.get());
 			} catch (InterruptedException e) {
@@ -85,12 +86,14 @@ public class MyExecutorService {
 		for (Integer number : responseCodes) {
 			occurrences.put(number, occurrences.getOrDefault(number, 0) + 1);
 		}
-
+		StringBuilder message = new StringBuilder();
 		// Виведення результату
 		for (Map.Entry<Integer, Integer> entry : occurrences.entrySet()) {
-			System.out.println("Response code: " + entry.getKey() + ", Кількість: " + entry.getValue());
+			message.append("Response code: " + entry.getKey() + ", Кількість: " + entry.getValue() + "\n");
+//			System.out.println(message);
 		}
-		System.out.println("Total: Passed - " + passed.get() + ", Failed - " + failed.get());
+		message.append("Total: Passed - " + passed.get() + ", Failed - " + failed.get() + "\n");
+//		System.out.println(message);
 		// Запам'ятовуємо час завершення
 		Instant end = Instant.now();
 
@@ -100,10 +103,12 @@ public class MyExecutorService {
 		// Виведення результатів у форматі хвилини та секунди
 		long minutes = duration.toMinutes();
 		long seconds = duration.minusMinutes(minutes).getSeconds();
-
-		System.out.println("Start Time: " + start);
-		System.out.println("End Time: " + end);
-		System.out.println("Duration: " + minutes + " minutes and " + seconds + " seconds");
+		message.append("Start Time: " + start + "\n" + "End Time: " + end + "\n" + "Duration: " + minutes
+				+ " minutes and " + seconds + " seconds" + "\n");
+//		System.out.println("Start Time: " + start);
+//		System.out.println("End Time: " + end);
+//		System.out.println("Duration: " + minutes + " minutes and " + seconds + " seconds");
+		System.out.println(message);
 		if (!isInterrupted) {
 			messagingTemplate.convertAndSendToUser(userName, "/topic/result", "{\"body\":{\"status\":\"finished\"}}");
 		}
@@ -167,10 +172,10 @@ public class MyExecutorService {
 						// Налаштування HttpsURLConnection
 						URI uri = new URI(runRequest.get("url").asText());
 						if ("http".equals(uri.getScheme())) {
-			                con = (HttpURLConnection) uri.toURL().openConnection();
-			            } else if ("https".equals(uri.getScheme())) {
-			                con = (HttpsURLConnection) uri.toURL().openConnection();
-			            }
+							con = (HttpURLConnection) uri.toURL().openConnection();
+						} else if ("https".equals(uri.getScheme())) {
+							con = (HttpsURLConnection) uri.toURL().openConnection();
+						}
 						// Налаштування методу та інших параметрів
 						con.setRequestMethod(runRequest.get("method").asText());
 						con.setRequestProperty("Content-Type", "application/json");

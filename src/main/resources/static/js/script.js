@@ -27,6 +27,8 @@ window.addEventListener("load", function () {
     const iterationsInput = this.document.getElementById("iterationsInput");
     const btn_Preview = this.document.getElementById("button-addon2");
     const num_Threads = this.document.getElementById("numThreads");
+    const divResults = this.document.getElementById("results");
+    const inputResults = divResults.querySelector("textarea");
     const stompClient = new StompJs.Client({
         brokerURL: 'ws://localhost:8080/ws-run-collection',
         splitLargeFrames: true
@@ -43,7 +45,11 @@ window.addEventListener("load", function () {
         stompClient.subscribe('/user/topic/result', function (response) {
             var json = JSON.parse(response.body);
             console.log(json.body.status);
+            inputResults.value = inputResults.value + 'Status: ' + json.body.status + ', Passed: ' + json.body.passed + ', Failed: ' + json.body.failed + '\n';
+            inputResults.scrollTop = inputResults.scrollHeight;
             if (json.body.status === 'finished' || json.body.status === 'stopped') {
+                inputResults.value = inputResults.value + '\n' + json.body.status;
+                inputResults.scrollTop = inputResults.scrollHeight;
                 disconnect();
                 btn_Run.textContent = 'Run';
                 btn_Run.disabled = false;
@@ -709,6 +715,7 @@ window.addEventListener("load", function () {
                     sendArray(JSON.stringify(jsonObject));
                     btn_Run.textContent = 'Stop';
                     btn_Run.disabled = false;
+                    divResults.classList.remove("hide");
                 }
             }, 10);
         } else {

@@ -140,3 +140,8 @@ div.list-group-horizontal> :first-child {
 #btn-run{
     width: 110px;
 }
+
+#results > textarea {
+    height: 150px;
+    resize: none;
+}
