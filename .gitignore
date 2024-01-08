@@ -25,3 +25,6 @@ buildNumber.properties
 HELP.md
 mvnw
 mvnw.cmd
+*.txt
+collections.json
+collections.json
