@@ -23,26 +23,53 @@ public class MyExecutorService {
 	private SimpMessagingTemplate messagingTemplate;
 
 	private ExecutorService executorService;
-//	private int numThreads;
 	private List<Integer> responseCodes = Collections.synchronizedList(new ArrayList<>());
 	private String logFilePath;
 	private AtomicInteger passed = new AtomicInteger(0);
 	private AtomicInteger failed = new AtomicInteger(0);
 	private int delay = 0;
 	private String userName;
+	private Instant start;
+	private Instant end;
 
 	public MyExecutorService(SimpMessagingTemplate messagingTemplate, String userName) {
-//		this.executorService = Executors.newFixedThreadPool(numThreads);
 		this.messagingTemplate = messagingTemplate;
 		this.userName = userName;
-//		this.numThreads = numThreads;
+	}
+
+	private StringBuilder gatherInfo() {
+		Map<Integer, Integer> occurrences = new HashMap<>();
+
+		// Підрахунок кількості входжень кожного значення в колекції
+		for (Integer number : responseCodes) {
+			occurrences.put(number, occurrences.getOrDefault(number, 0) + 1);
+		}
+		StringBuilder message = new StringBuilder();
+		// Виведення результату
+		for (Map.Entry<Integer, Integer> entry : occurrences.entrySet()) {
+			message.append("Response code: " + entry.getKey() + ", Кількість: " + entry.getValue() + "\\n");
+//			System.out.println(message);
+		}
+		message.append("Total: Passed - " + passed.get() + ", Failed - " + failed.get() + "\\n");
+//		System.out.println(message);
+		// Запам'ятовуємо час завершення
+		end = Instant.now();
+
+		// Розрахунок тривалості виконання
+		Duration duration = Duration.between(start, end);
+
+		// Виведення результатів у форматі хвилини та секунди
+		long minutes = duration.toMinutes();
+		long seconds = duration.minusMinutes(minutes).getSeconds();
+		message.append("Start Time: " + start + "\\n" + "End Time: " + end + "\\n" + "Duration: " + minutes
+				+ " minutes and " + seconds + " seconds" + "\\n");
+		return message;
+
 	}
 
 	public void execute(String config) {
 		// Запам'ятовуємо час старту
-		System.out.println("Passed (start): " + passed.get() + ", Failed(start): " + failed.get());
-		System.out.println(this.userName);
-		Instant start = Instant.now();
+		start = Instant.now();
 		ObjectMapper objectMapper = new ObjectMapper();
 
 //		StringBuilder[][] arrayCollection = null;
@@ -62,7 +89,8 @@ public class MyExecutorService {
 //		MyUtils.setHTTPSConnectionSettings();
 //		
 		executorService = Executors.newFixedThreadPool(numThreads);
-		for (int i = 0; i < numThreads; i++) {
+//		System.out.println(iterations.size());
+		for (int i = 0; i < numThreads && i < (iterations.size() != 0 ? iterations.size() : numThreads); i++) {
 //			executorService.execute(new MyRunnable(config));
 			executorService.execute(new ArrayRequestProcessor(iterations, requests, i, numThreads));
 		}
@@ -80,37 +108,13 @@ public class MyExecutorService {
 				e.printStackTrace();
 			}
 		}
-		Map<Integer, Integer> occurrences = new HashMap<>();
-
-		// Підрахунок кількості входжень кожного значення в колекції
-		for (Integer number : responseCodes) {
-			occurrences.put(number, occurrences.getOrDefault(number, 0) + 1);
-		}
-		StringBuilder message = new StringBuilder();
-		// Виведення результату
-		for (Map.Entry<Integer, Integer> entry : occurrences.entrySet()) {
-			message.append("Response code: " + entry.getKey() + ", Кількість: " + entry.getValue() + "\n");
-//			System.out.println(message);
-		}
-		message.append("Total: Passed - " + passed.get() + ", Failed - " + failed.get() + "\n");
+		StringBuilder message = gatherInfo();
 //		System.out.println(message);
-		// Запам'ятовуємо час завершення
-		Instant end = Instant.now();
-
-		// Розрахунок тривалості виконання
-		Duration duration = Duration.between(start, end);
-
-		// Виведення результатів у форматі хвилини та секунди
-		long minutes = duration.toMinutes();
-		long seconds = duration.minusMinutes(minutes).getSeconds();
-		message.append("Start Time: " + start + "\n" + "End Time: " + end + "\n" + "Duration: " + minutes
-				+ " minutes and " + seconds + " seconds" + "\n");
-//		System.out.println("Start Time: " + start);
-//		System.out.println("End Time: " + end);
-//		System.out.println("Duration: " + minutes + " minutes and " + seconds + " seconds");
-		System.out.println(message);
 		if (!isInterrupted) {
-			messagingTemplate.convertAndSendToUser(userName, "/topic/result", "{\"body\":{\"status\":\"finished\"}}");
+			System.out.println("{\"body\":{\"status\":\"finished\", \"message\":\"" + message + "\"}}");
+			messagingTemplate.convertAndSendToUser(userName, "/topic/result",
+					"{\"body\":{\"status\":\"finished\",\"passed\":" + passed.get() + ", \"failed\":" + failed.get()
+							+ ", \"message\":\"" + message + "\"}}");
 		}
 
 	}
@@ -120,17 +124,17 @@ public class MyExecutorService {
 		messagingTemplate.convertAndSendToUser(userName, "/topic/result", "{\"body\":{\"status\":\"stopping\"}}");
 		while (!executorService.isTerminated()) {
 			try {
-//				Thread.sleep(1000);
-
-//				executorService.shutdownNow();
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				messagingTemplate.convertAndSendToUser(userName, "/topic/result",
-						"{\"body\":{\"status\":\"stopped\"}}");
+						"{\"body\":{\"status\":\"interrupted\"}}");
 			}
 		}
-		messagingTemplate.convertAndSendToUser(userName, "/topic/result", "{\"body\":{\"status\":\"stopped\"}}");
+		StringBuilder message = gatherInfo();
+		System.out.println(message);
+		messagingTemplate.convertAndSendToUser(userName, "/topic/result",
+				"{\"body\":{\"status\":\"stopped\", \"passed\":" + passed.get() + ", \"failed\":" + failed.get() + ",\"message\":\"" + message + "\"}}");
 
 	}
 
@@ -166,9 +170,9 @@ public class MyExecutorService {
 						String request = arrayOfVars.isEmpty() ? runRequest.get("body").toString()
 								: MyUtils.fillBody(new StringBuilder(runRequest.get("body").toString()),
 										arrayOfVars.get(0), arrayOfVars.get(i));
-						System.out.println((!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
-								+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
-								+ " Request: " + request);
+//						System.out.println((!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
+//								+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
+//								+ " Request: " + request);
 						// Налаштування HttpsURLConnection
 						URI uri = new URI(runRequest.get("url").asText());
 						if ("http".equals(uri.getScheme())) {
@@ -186,6 +190,9 @@ public class MyExecutorService {
 						con.setReadTimeout(10000);
 						con.connect();
 						// System.out.println(request);
+						Instant startRequest = Instant.now();
+
+						
 						try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
 							wr.writeBytes(request);
 							wr.flush();
@@ -202,13 +209,16 @@ public class MyExecutorService {
 							while ((inputLine = in.readLine()) != null) {
 								response.append(inputLine);
 							}
-
+							Instant endRequest = Instant.now();
+							// Розрахунок тривалості виконання
+							Duration duration = Duration.between(startRequest, endRequest);
+							long millis = duration.toMillis();
 							// Обробка JSON-відповіді
 							MyUtils.log(logFilePath,
 									(!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
 											+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
-											+ " Request: " + request + " - Response Code: " + responseCode + "\n"
-											+ "Response: " + response.toString());
+											+ " Request: " + request + " - " + responseCode + "\n" + "Response: "
+											+ response.toString() + " - " + millis + "ms.");
 							// Перетворюємо JSON-рядок у об'єкт JsonNode
 							ObjectMapper objectMapper = new ObjectMapper();
 							JsonNode jsonNode = objectMapper.readTree(response.toString());

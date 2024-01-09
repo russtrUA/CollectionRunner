@@ -35,7 +35,11 @@ public class RunnerController {
 	@GetMapping("/load")
 	public @ResponseBody String loadJson() {
 		MyUtils.setHTTPSConnectionSettings();
-		return MyUtils.readFile("collections.json").toString();
+		StringBuilder content = MyUtils.readFile("collections.json");
+		if (content.isEmpty()) {
+			content.append("{}");
+		}
+		return content.toString();
 	}
 
 	@PostMapping("/save-to-file")

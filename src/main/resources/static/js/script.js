@@ -1,5 +1,5 @@
 window.addEventListener("load", function () {
-    var gJson;
+    var gJson = {"collections":[]};
     var gfileContents;
     var glines;
     var gVars = [];
@@ -45,10 +45,13 @@ window.addEventListener("load", function () {
         stompClient.subscribe('/user/topic/result', function (response) {
             var json = JSON.parse(response.body);
             console.log(json.body.status);
+            if (json.body.status === 'stopping') {
+                return
+            }
             inputResults.value = inputResults.value + 'Status: ' + json.body.status + ', Passed: ' + json.body.passed + ', Failed: ' + json.body.failed + '\n';
             inputResults.scrollTop = inputResults.scrollHeight;
             if (json.body.status === 'finished' || json.body.status === 'stopped') {
-                inputResults.value = inputResults.value + '\n' + json.body.status;
+                inputResults.value = inputResults.value + '\n' + json.body.status + '\n' + json.body.message;
                 inputResults.scrollTop = inputResults.scrollHeight;
                 disconnect();
                 btn_Run.textContent = 'Run';
@@ -114,6 +117,9 @@ window.addEventListener("load", function () {
 
     function maxCollectiontId() {
         var maxId = 0;
+        if (!gJson.collections) {
+            return 0;
+        }
         gJson.collections.forEach(collection => {
             if (collection.collection.id > maxId) {
                 maxId = collection.collection.id
@@ -565,9 +571,10 @@ window.addEventListener("load", function () {
 
     }
     function fillCollections(jsonData) {
+        if (!jsonData.collections) 
+            return
         jsonData = addId(jsonData);
         gJson = jsonData;
-
         jsonData.collections.forEach(collection => {
             const requests = collection.collection.requests;
             var collectionItem = createCollectionElement(collection.collection.name, collection.collection.id);
@@ -708,6 +715,7 @@ window.addEventListener("load", function () {
         if (btn_Run.textContent === 'Run') {
             connect();
             btn_Run.disabled = true;
+            inputResults.value = '';
             const intervalId = setInterval(() => {
                 if (stompClient.connected) {
                     clearInterval(intervalId);
@@ -765,20 +773,25 @@ window.addEventListener("load", function () {
                 gfileContents = e.target.result;
                 iterationsDiv.classList.remove("hide");
                 glines = gfileContents.split('\r\n');
-                iterationsInput.value = glines.length - 1;
+                // iterationsInput.value = glines.length - 1;
+                var kol_vars = glines[0].split(",").length;
+                var cntIterations = 0;
+                glines.forEach(str => {
+                    if (str) {
+                        cntIterations += 1;
+                        var vars = str.split(",");
+                        if (vars.length !== kol_vars) {
+                            errFile.innerText = "Wrong count of variables in the file!";
+                            throw new Error("Wrong count of variables in the file!");
+                        }
+                        gVars.push(vars);    
+                    }
+                })
+                iterationsInput.value = cntIterations - 1;
                 if (iterationsInput.value > 1) {
                     num_Threads.disabled = false;
                     num_Threads.setAttribute("max", iterationsInput.value)
                 }
-                var kol_vars = glines[0].split(",").length;
-                glines.forEach(str => {
-                    var vars = str.split(",");
-                    if (vars.length !== kol_vars) {
-                        errFile.innerText = "Wrong count of variables in the file!";
-                        throw new Error("Wrong count of variables in the file!");
-                    }
-                    gVars.push(vars);
-                })
                 btn_Run.disabled = false;
             };
             // Прочитати файл як текст
