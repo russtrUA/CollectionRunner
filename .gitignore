@@ -31,3 +31,5 @@ mvnw.cmd
 .idea/jarRepositories.xml
 .idea/misc.xml
 .idea/vcs.xml
+collections.json
+user.config
