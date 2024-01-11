@@ -27,3 +27,8 @@ mvnw
 mvnw.cmd
 *.txt
 collections.json
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/vcs.xml
