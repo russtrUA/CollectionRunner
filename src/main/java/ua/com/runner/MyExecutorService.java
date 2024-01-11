@@ -132,7 +132,7 @@ public class MyExecutorService {
 			}
 		}
 		StringBuilder message = gatherInfo();
-		System.out.println(message);
+//		System.out.println(message);
 		messagingTemplate.convertAndSendToUser(userName, "/topic/result",
 				"{\"body\":{\"status\":\"stopped\", \"passed\":" + passed.get() + ", \"failed\":" + failed.get() + ",\"message\":\"" + message + "\"}}");
 
@@ -246,6 +246,7 @@ public class MyExecutorService {
 				} while (i < arrayOfVars.size());
 
 			} catch (Exception e) {
+				failed.incrementAndGet();
 				e.printStackTrace();
 			} finally {
 				if (con != null) {

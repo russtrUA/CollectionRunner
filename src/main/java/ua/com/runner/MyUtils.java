@@ -30,7 +30,19 @@ public class MyUtils {
 				content.append(line);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			 System.out.println("Файл не існує. Спробую створити новий.");
+	            
+	            // Спроба створити новий файл
+	            try {
+	                File file = new File(pathToFile);
+	                if (file.createNewFile()) {
+	                    System.out.println("Новий файл створений.");
+	                } else {
+	                    System.out.println("Не вдалося створити файл.");
+	                }
+	            } catch (IOException ex) {
+	                ex.printStackTrace();
+	            }
 		}
 		return content;
 	}
@@ -120,25 +132,32 @@ public class MyUtils {
 		return objMapper.writeValueAsString(rootNode);
 	}
 
-	static void setHTTPSConnectionSettings() {
+	static boolean setHTTPSConnectionSettings() {
 		String pfxFilePath = null, pfxPasswordFilePath = null;
 		// Вказати шлях до файлу налаштувань користувача
 		File userConfigFile = new File("user.config");
+		if (!userConfigFile.exists()) {
+			System.out.println("File user.config doesn't exists");
+			return false;
+		}
 		Properties properties = new Properties();
 		try (FileInputStream input = new FileInputStream(userConfigFile)) {
 			properties.load(input);
 			pfxFilePath = properties.getProperty("pfx_file_path");
 			pfxPasswordFilePath = properties.getProperty("pfx_password_path");
 		} catch (IOException ex) {
-			System.out.println("Помилка при зчитуванні файлу налаштувань: " + ex.getMessage());
+			System.out.println("Помилка при зчитуванні файлу налаштувань: ");
+			return false;
 		}
 		String pfxPassword = null;
 		try (BufferedReader fileReader = new BufferedReader(new FileReader(pfxPasswordFilePath))) {
 			pfxPassword = fileReader.readLine();
 		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
+			System.out.println("Файл з паролем не знайдено");
+			return false;
 		} catch (IOException e1) {
 			e1.printStackTrace();
+			return false;
 		}
 		// Завантаження PFX-файлу та встановлення його як довіреного складу ключів
 		try {
@@ -170,7 +189,9 @@ public class MyUtils {
 			HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 		} catch (Exception e) {
 			e.printStackTrace();
+			return false;
 		}
+		return true;
 	}
 //	static String[][] getVarsFromFile(String fileWithVars) throws Exception {
 //		try (BufferedReader fileReader = new BufferedReader(new FileReader(fileWithVars))) {

@@ -142,6 +142,6 @@ div.list-group-horizontal> :first-child {
 }
 
 #results > textarea {
-    height: 450px;
+    height: 300px;
     resize: none;
 }

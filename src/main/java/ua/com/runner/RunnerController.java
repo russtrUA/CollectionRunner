@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class RunnerController {
 
 	private Map<String, MyExecutorService> collExecutors = Collections.synchronizedMap(new HashMap<>());
+	private boolean isHttpsSet = MyUtils.setHTTPSConnectionSettings();
 
 	@Autowired
 	private SimpMessagingTemplate messagingTemplate;
@@ -34,7 +35,7 @@ public class RunnerController {
 
 	@GetMapping("/load")
 	public @ResponseBody String loadJson() {
-		MyUtils.setHTTPSConnectionSettings();
+//		MyUtils.setHTTPSConnectionSettings();
 		StringBuilder content = MyUtils.readFile("collections.json");
 		if (content.isEmpty()) {
 			content.append("{}");
@@ -63,6 +64,9 @@ public class RunnerController {
 			if ("http".equals(uri.getScheme())) {
 				con = (HttpURLConnection) uri.toURL().openConnection();
 			} else if ("https".equals(uri.getScheme())) {
+				if (!isHttpsSet) {
+					System.out.println("Warning! HTTPS settings is not set. Check user.config");
+				}
 				con = (HttpsURLConnection) uri.toURL().openConnection();
 			}
 			// Налаштування методу та інших параметрів
@@ -74,9 +78,9 @@ public class RunnerController {
 			con.setConnectTimeout(10000);
 			con.setReadTimeout(10000);
 			con.connect();
-			System.out.println(clientRequest.get("url").asText());
-			System.out.println(clientRequest.get("method").asText());
-			System.out.println(request);
+//			System.out.println(clientRequest.get("url").asText());
+//			System.out.println(clientRequest.get("method").asText());
+//			System.out.println(request);
 			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
 				wr.writeBytes(request);
 				wr.flush();
@@ -94,16 +98,18 @@ public class RunnerController {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+				return e.getMessage();
 			}
 			con.disconnect();
 		} catch (Exception e) {
 			e.printStackTrace();
+			return e.getMessage();
 		} finally {
 			if (con != null) {
 				con.disconnect();
 			}
 		}
-		System.out.println(response.toString());
+//		System.out.println(response.toString());
 		return response.toString();
 	}
 

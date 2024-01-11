@@ -145,9 +145,14 @@ window.addEventListener("load", function () {
             },
             body: JSON.stringify({ method: method, url: url, jsonBody: jsonBody }),
         })
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
-                gResponse.value = JSON.stringify(data, null, 4);
+                try {
+                    gResponse.value = JSON.stringify(JSON.parse(data), null, 4);
+                } catch (error) {
+                    gResponse.value = data;
+                    console.log(data);
+                }
             });
     }
     function saveToFile(jsonData) {
@@ -325,6 +330,13 @@ window.addEventListener("load", function () {
             btn_delFile.click();
             headerName.textContent = 'Run ' + gJson.collections[index].collection.name;
             sortList.innerHTML = '';
+            divResults.classList.add("hide");
+            inputResults.value = '';
+            if (gJson.collections[index].collection.requests.length === 0) {
+                runSettings.classList.add("hide");
+                runHeader.classList.remove("hide");
+                runHeader.textContent = 'Collection is empty.'
+            }
             gJson.collections[index].collection.requests.forEach(request => {
                 const liElement = document.createElement("li");
                 liElement.classList.add("list-group-item", "border-0", "list-group-item-action");
@@ -346,6 +358,7 @@ window.addEventListener("load", function () {
                 liElement.appendChild(spanElement);
                 sortList.appendChild(liElement);
             });
+
             // console.log(gJson.collections[index]);
         });
         listAction.appendChild(listItemAction);
