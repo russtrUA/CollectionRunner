@@ -71,8 +71,6 @@ public class MyExecutorService {
 		// Запам'ятовуємо час старту
 		start = Instant.now();
 		ObjectMapper objectMapper = new ObjectMapper();
-
-//		StringBuilder[][] arrayCollection = null;
 		JsonNode requests = null, iterations = null;
 		int numThreads = 1;
 		try {
@@ -85,13 +83,11 @@ public class MyExecutorService {
 			e.printStackTrace();
 		}
 		logFilePath = "log_" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()) + ".txt";
+		MyUtils.log(logFilePath, "Starting collection running. Count of requests: " + requests.size() + "; Count of iterations: " + (iterations.size() - 1) 
+				+ "; delay: " + delay + "ms.; Count of threads:" + numThreads);
 
-//		MyUtils.setHTTPSConnectionSettings();
-//		
 		executorService = Executors.newFixedThreadPool(numThreads);
-//		System.out.println(iterations.size());
 		for (int i = 0; i < numThreads && i < (iterations.size() != 0 ? iterations.size() : numThreads); i++) {
-//			executorService.execute(new MyRunnable(config));
 			executorService.execute(new ArrayRequestProcessor(iterations, requests, i, numThreads));
 		}
 		executorService.shutdown();
@@ -109,7 +105,6 @@ public class MyExecutorService {
 			}
 		}
 		StringBuilder message = gatherInfo();
-//		System.out.println(message);
 		if (!isInterrupted) {
 			System.out.println("{\"body\":{\"status\":\"finished\", \"message\":\"" + message + "\"}}");
 			messagingTemplate.convertAndSendToUser(userName, "/topic/result",
@@ -170,9 +165,6 @@ public class MyExecutorService {
 						String request = arrayOfVars.isEmpty() ? runRequest.get("body").toString()
 								: MyUtils.fillBody(new StringBuilder(runRequest.get("body").toString()),
 										arrayOfVars.get(0), arrayOfVars.get(i));
-//						System.out.println((!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
-//								+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
-//								+ " Request: " + request);
 						// Налаштування HttpsURLConnection
 						URI uri = new URI(runRequest.get("url").asText());
 						if ("http".equals(uri.getScheme())) {
@@ -255,33 +247,4 @@ public class MyExecutorService {
 			}
 		}
 	}
-
-//	class MyRunnable implements Runnable {
-//		private final String vars;
-//
-//		public MyRunnable(String vars) {
-//			this.vars = vars;
-//		}
-//
-//		@Override
-//		public void run() {
-//			try {
-////				for (char string : vars.toCharArray()) {
-//				for (int i = 0; i < 3; i++) {
-//					if (isInterrupted) {
-//						Thread.currentThread().interrupt();
-//						System.out.println(Thread.currentThread().getName() + ": stopped");
-//						break;
-//					}
-////					System.out.println(Thread.currentThread().getName() + ": " + vars);
-//					Thread.sleep(1000);
-////					System.out.println(Thread.currentThread().getName() + ": " + string + "afterSleeping");
-//				}
-//			} catch (InterruptedException e) {
-//				System.out.println(Thread.currentThread().getName() + " is interrupted.");
-//				Thread.currentThread().interrupt();
-//
-//			}
-//		}
-//	}
 }

@@ -8,11 +8,11 @@
 		<version>3.2.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example</groupId>
-	<artifactId>demo</artifactId>
+	<groupId>ua.com.runner</groupId>
+	<artifactId>collection-runner</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>CollectionRunner</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Runner of collection of requests to another API</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
