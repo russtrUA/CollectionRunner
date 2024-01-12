@@ -168,17 +168,16 @@ public class MyUtils {
 			kmf.init(keyStore, pfxPassword.toCharArray());
 			KeyManager[] kms = kmf.getKeyManagers();
 
-			// Assuming that you imported the CA Cert
-			// to your cacerts Store.
-			KeyStore trustStore = KeyStore.getInstance("JKS");
-			String javaHome = System.getProperty("java.home");
-			String cacertsFilePath = Paths.get(javaHome, "lib", "security", "cacerts").toString();
-			trustStore.load(new FileInputStream(cacertsFilePath), "changeit".toCharArray());
+			// Отримати системний кейстор "Windows-ROOT"
+	        KeyStore trustStore = KeyStore.getInstance("Windows-ROOT");
+	        trustStore.load(null, null);
 
-			// Встановлення довіреного складу ключів для TrustManagerFactory
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			tmf.init(trustStore);
-			TrustManager[] tms = tmf.getTrustManagers();
+	        // Ініціалізувати TrustManagerFactory з системним кейстором
+	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+	        tmf.init(trustStore);
+
+	        // Отримати TrustManagers
+	        TrustManager[] tms = tmf.getTrustManagers();
 
 			// Створення SSLContext з TrustManagerFactory
 			SSLContext sslContext = SSLContext.getInstance("TLS");
