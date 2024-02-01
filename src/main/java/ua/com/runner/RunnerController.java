@@ -35,7 +35,6 @@ public class RunnerController {
 
 	@GetMapping("/load")
 	public @ResponseBody String loadJson() {
-//		MyUtils.setHTTPSConnectionSettings();
 		StringBuilder content = MyUtils.readFile("collections.json");
 		if (content.isEmpty()) {
 			content.append("{}");
@@ -78,9 +77,6 @@ public class RunnerController {
 			con.setConnectTimeout(10000);
 			con.setReadTimeout(10000);
 			con.connect();
-//			System.out.println(clientRequest.get("url").asText());
-//			System.out.println(clientRequest.get("method").asText());
-//			System.out.println(request);
 			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
 				wr.writeBytes(request);
 				wr.flush();
@@ -109,7 +105,6 @@ public class RunnerController {
 				con.disconnect();
 			}
 		}
-//		System.out.println(response.toString());
 		return response.toString();
 	}
 

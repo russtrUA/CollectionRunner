@@ -7,16 +7,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Request Form</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous"> -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script> -->
+    <script src="/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js"></script> -->
+    <script src="/js/Sortable.min.js"></script>
+    <script src="/js/stomp.umd.min.js"></script>
+    <script src="/js/chart.js"></script>
+    <script src="/js/hammer.min.js"></script>
+    <script src="/js/chartjs-plugin-zoom.min.js"></script>
     <script src="/js/script.js"></script>
 </head>
 
@@ -38,6 +50,17 @@
                         <li class="nav-item" role="presentation">
                             <div class="nav-link " id="run-tab" data-bs-toggle="tab" data-bs-target="#run-collection"
                                 type="button" role="tab" aria-controls="run-collection" aria-selected="true">Runner
+                            </div>
+                        </li>
+                        <li class="nav-item hide" role="presentation">
+                            <div class="nav-link pe-1" id="results-tab" data-bs-toggle="tab"
+                                data-bs-target="#results-collection" type="button" role="tab"
+                                aria-controls="results-collection" aria-selected="true">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>Results</div>
+                                    <button id="btn-hide-results" class="btn-close ms-2 me-1 my-btn-close"
+                                        aria-label="Close"></button>
+                                </div>
                             </div>
                         </li>
                     </ul>
@@ -85,7 +108,7 @@
                                 disabled></textarea>
                         </div>
                     </div>
-                    <div class="tab-pane " id="run-collection" role="tabpanel" aria-labelledby="run-tab">
+                    <div class="tab-pane" id="run-collection" role="tabpanel" aria-labelledby="run-tab">
                         <div class="text-center mt-1">
                             <h3>Run collection</h3>
                         </div>
@@ -94,7 +117,7 @@
                         </div>
                         <div class="container runner-settings mt-3 hide">
                             <div class="row justify-content-end">
-                                <button id="btn-close-runner" type="button" class="btn-close"
+                                <button id="btn-close-runner" type="button" class="btn-close my-btn-close"
                                     aria-label="Close"></button>
                             </div>
                             <div class="row">
@@ -124,8 +147,8 @@
                                     <div class="row ms-0">
                                         <input class="form-control-sm col-8" id="formFileSm" type="file"
                                             accept=".txt,.csv">
-                                        <button id="btn-delete-file" type="button" class="btn-close ms-1 col-1 hide"
-                                            aria-label="Delete"></button>
+                                        <button id="btn-delete-file" type="button"
+                                            class="btn-close ms-1 col-1 hide my-btn-close" aria-label="Delete"></button>
                                         <div id="fileError" class="error-message">
                                         </div>
                                     </div>
@@ -152,22 +175,31 @@
                                                         <div class="modal-body">
                                                             ...
                                                         </div>
-                                                        <!-- <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Close</button>
-                                                            <button type="button"
-                                                                class="btn btn-primary">Understood</button>
-                                                        </div> -->
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <button type="button" id="btn-run" class="btn btn-primary mt-3">Run</button>
-                                    <div id="results" class="hide mt-1">
-                                        <h5>Results:</h5>
-                                        <textarea class="form-control" disabled></textarea>
-                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane hide" id="results-collection" role="tabpanel" aria-labelledby="result-tab">
+                        <div class="text-center mt-1">
+                            <h3>Results of running</h3>
+                        </div>
+                        <div class="container">
+                            <div class="row justify-content-end" id="copy-btn">
+                                <button type="button" id="btn-run-copy" class="btn btn-primary mt-3"></button>
+                            </div>
+                            <div class="row">
+                                <canvas id="myChart"></canvas>
+                            </div>
+                            <div class="row">
+                                <div id="results" class="mt-2">
+                                    <h5>Results:</h5>
+                                    <textarea class="form-control mt-1" disabled></textarea>
                                 </div>
                             </div>
                         </div>
