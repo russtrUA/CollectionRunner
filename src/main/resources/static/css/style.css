@@ -129,19 +129,22 @@ div.list-group-horizontal> :first-child {
 .run-order {
     height: 100vh;
 }
-#btn-close-runner {
-    width: 5px;
-    height: 5px;
-}
-#btn-delete-file {
+.my-btn-close {
     width: 5px;
     height: 5px;
 }
 #btn-run{
     width: 110px;
 }
+#btn-run-copy {
+    width: 110px;
+}
 
 #results > textarea {
-    height: 300px;
+    height: 30vh;
     resize: none;
+}
+#myChart {
+    height: 35vh;
+    background-color: #182432;
 }

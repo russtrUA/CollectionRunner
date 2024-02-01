@@ -1,5 +1,5 @@
 window.addEventListener("load", function () {
-    var gJson = {"collections":[]};
+    var gJson = { "collections": [] };
     var gfileContents;
     var glines;
     var gVars = [];
@@ -29,6 +29,128 @@ window.addEventListener("load", function () {
     const num_Threads = this.document.getElementById("numThreads");
     const divResults = this.document.getElementById("results");
     const inputResults = divResults.querySelector("textarea");
+    const runTab = document.getElementById("run-tab");
+    const runPane = document.getElementById("run-collection");
+    const resultsTab = document.getElementById("results-tab");
+    const resultsPane = document.getElementById("results-collection");
+    const btn_CloseTab = this.document.getElementById("btn-hide-results");
+    const btn_CopyRun = this.document.getElementById("btn-run-copy");
+    let canvas = document.getElementById("myChart");
+    let context = canvas.getContext('2d');
+    let chart = null;
+    let gCounter = 0;
+    let pauseMode = false;
+    const onPanZoomStart = () => {
+            chart.stop();
+            pauseMode = true;            
+    }
+    const onPanZoomComplete = () => {
+        if (chart.config.options.scales.x.max > (chart.getDatasetMeta(0).data.length - 5)) {
+            pauseMode = false;
+        }
+    }
+    const createLineChart = (xData, yData, zData) => {
+        let data = {
+            labels: xData,
+            datasets: [
+                {
+                    label: 'Passed requests',
+                    data: yData,
+                    pointStyle: false,
+                    fill: true,
+                    // backgroundColor: 'rgba(74, 169, 230, 0.8)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(74, 169, 230, 1)',
+                    tension: 0.2
+                }
+                ,
+                {
+                    label: 'Failed requests',
+                    data: zData,
+                    pointStyle: false,
+                    fill: true,
+                    // backgroundColor: 'red',
+                    borderWidth: 1,
+                    borderColor: 'red',
+                    tension: 0.2
+                }
+            ]
+        }
+        let xScaleConfig = {
+            min: 0,
+            max: 0,
+            ticks: {
+                autoSkip: true,
+                // maxRotation: 0
+                minRotation: 90,
+                color: 'rgba(74, 169, 230, 0.9)'
+            },
+            border: {
+                color: 'rgba(74, 169, 230, 1)'
+            },
+            grid: {
+                color: 'rgba(74, 169, 230, 0.3)'
+            }
+        }
+        let yScaleConfig = {
+            ticks: {
+                color: 'rgba(74, 169, 230, 0.9)'
+            },
+            border: {
+                color: 'rgba(74, 169, 230, 1)'
+            },
+            grid: {
+                color: 'rgba(74, 169, 230, 0.3)'
+            },
+            beginAtZero: true
+        }
+        let zoomOptions = {
+            pan: {
+                enabled: true,
+                mode: 'x',
+                onPanStart: onPanZoomStart,
+                onPanComplete: onPanZoomComplete
+            },
+            zoom: {
+                mode: 'x',
+                pinch: {
+                    enabled: true
+                },
+                wheel: {
+                    enabled: true
+                },
+                onZoomStart: onPanZoomStart,
+                onZoomComplete: onPanZoomComplete
+            }
+        }
+        let config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    x: xScaleConfig,
+                    y: yScaleConfig
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    zoom: zoomOptions
+                },
+                animation: {
+                    duration: 400,
+                    easing: 'linear',
+                    y: {
+                        fn: (from, to, factor) => to
+                    }
+                }
+            }
+        };
+        chart = new Chart(context, config);
+    }
+
+
+
     const stompClient = new StompJs.Client({
         brokerURL: 'ws://localhost:8080/ws-run-collection',
         splitLargeFrames: true
@@ -41,13 +163,41 @@ window.addEventListener("load", function () {
         // reconnectDelay: 50000
     });
     stompClient.onConnect = (frame) => {
-        console.log('Connected: ' + frame);
+        // console.log('Connected: ' + frame);
         stompClient.subscribe('/user/topic/result', function (response) {
             var json = JSON.parse(response.body);
-            console.log(json.body.status);
+            // console.log(json.body.status);
             if (json.body.status === 'stopping') {
                 return
             }
+            // Отримати поточний час
+            const currentDate = new Date();
+
+            // Використовувати Intl.DateTimeFormat для форматування часу
+            const timeString = new Intl.DateTimeFormat('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).format(currentDate);
+            //drawing chart
+            chart.config.data.labels.push(timeString);
+            chart.config.data.datasets[0].data.push(json.body.passed);
+            chart.config.data.datasets[1].data.push(json.body.failed);
+            // console.log(pauseMode);
+            if (!pauseMode) {
+                if (gCounter > 50) {
+                    chart.config.options.scales.x.min++;
+                    chart.config.options.scales.x.max++;
+                } else {
+                    chart.config.options.scales.x.max++;
+                }
+                chart.update();
+
+                // console.log(gCounter);
+            }
+            gCounter++;
+            //output in textarea
             inputResults.value = inputResults.value + 'Status: ' + json.body.status + ', Passed: ' + json.body.passed + ', Failed: ' + json.body.failed + '\n';
             inputResults.scrollTop = inputResults.scrollHeight;
             if (json.body.status === 'finished' || json.body.status === 'stopped') {
@@ -56,6 +206,9 @@ window.addEventListener("load", function () {
                 disconnect();
                 btn_Run.textContent = 'Run';
                 btn_Run.disabled = false;
+                btn_CopyRun.textContent = 'Run again';
+                btn_CopyRun.disabled = false;
+                btn_CloseTab.disabled = false;
             }
         });
     };
@@ -151,7 +304,7 @@ window.addEventListener("load", function () {
                     gResponse.value = JSON.stringify(JSON.parse(data), null, 4);
                 } catch (error) {
                     gResponse.value = data;
-                    console.log(data);
+                    // console.log(data);
                 }
             });
     }
@@ -312,8 +465,6 @@ window.addEventListener("load", function () {
 
             const activeTab = document.querySelector(".nav-link.active");
             const activePane = document.querySelector(".tab-pane.active");
-            const runTab = document.getElementById("run-tab");
-            const runPane = document.getElementById("run-collection");
             if (!runTab.classList.contains("active")) {
                 activeTab.classList.remove("active");
                 activePane.classList.remove("active");
@@ -330,7 +481,6 @@ window.addEventListener("load", function () {
             btn_delFile.click();
             headerName.textContent = 'Run ' + gJson.collections[index].collection.name;
             sortList.innerHTML = '';
-            divResults.classList.add("hide");
             inputResults.value = '';
             if (gJson.collections[index].collection.requests.length === 0) {
                 runSettings.classList.add("hide");
@@ -350,6 +500,7 @@ window.addEventListener("load", function () {
                     );
 
                     btn_Run.disabled = allUnchecked;
+                    btn_CopyRun.disabled = allUnchecked;
                 })
                 liElement.appendChild(inputElement);
                 const spanElement = document.createElement("span");
@@ -584,7 +735,7 @@ window.addEventListener("load", function () {
 
     }
     function fillCollections(jsonData) {
-        if (!jsonData.collections) 
+        if (!jsonData.collections)
             return
         jsonData = addId(jsonData);
         gJson = jsonData;
@@ -723,11 +874,11 @@ window.addEventListener("load", function () {
         runSettings.classList.add("hide");
         headerName.textContent = 'Run collection';
     })
-
-    btn_Run.addEventListener("click", () => {
+    const runHandler = () => {
         if (btn_Run.textContent === 'Run') {
             connect();
             btn_Run.disabled = true;
+            btn_CopyRun.disabled = true;
             inputResults.value = '';
             const intervalId = setInterval(() => {
                 if (stompClient.connected) {
@@ -736,7 +887,27 @@ window.addEventListener("load", function () {
                     sendArray(JSON.stringify(jsonObject));
                     btn_Run.textContent = 'Stop';
                     btn_Run.disabled = false;
-                    divResults.classList.remove("hide");
+                    btn_CopyRun.textContent = 'Stop';
+                    btn_CopyRun.disabled = false;
+                    const activeTab = document.querySelector(".nav-link.active");
+                    const activePane = document.querySelector(".tab-pane.active");
+                    if (resultsPane.classList.contains("hide")) {
+                        resultsTab.parentElement.classList.remove("hide")
+                        resultsPane.classList.remove("hide");
+                    }
+                    if (!resultsTab.classList.contains("active")) {
+                        activeTab.classList.remove("active");
+                        activePane.classList.remove("active");
+                        resultsTab.classList.add("active");
+                        resultsPane.classList.add("active");
+                    }
+                    btn_CloseTab.disabled = true;
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    gCounter = 0;
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    createLineChart([], [], []);
                 }
             }, 10);
         } else {
@@ -745,10 +916,13 @@ window.addEventListener("load", function () {
             });
             btn_Run.textContent = 'Stopping...';
             btn_Run.disabled = true;
+            btn_CopyRun.textContent = 'Stopping...';
+            btn_CopyRun.disabled = true;
         }
 
-    })
-
+    }
+    btn_Run.addEventListener("click", runHandler);
+    btn_CopyRun.addEventListener("click", runHandler);
     function runConfiguration() {
         var newObj = {};
         newObj.requests = [];
@@ -767,7 +941,7 @@ window.addEventListener("load", function () {
         newObj.delay = parseInt(document.getElementById("delay").value);
         newObj.numThreads = parseInt(num_Threads.value);
         newObj.iterations = gVars;
-        console.log(newObj);
+        // console.log(newObj);
         return newObj;
     }
     function readFile() {
@@ -797,7 +971,7 @@ window.addEventListener("load", function () {
                             errFile.innerText = "Wrong count of variables in the file!";
                             throw new Error("Wrong count of variables in the file!");
                         }
-                        gVars.push(vars);    
+                        gVars.push(vars);
                     }
                 })
                 iterationsInput.value = cntIterations - 1;
@@ -845,4 +1019,15 @@ window.addEventListener("load", function () {
     btn_Preview.addEventListener("click", () => {
         this.document.querySelector(".modal-body").innerText = gfileContents;
     })
+    btn_CloseTab.addEventListener("click", () => {
+        resultsTab.parentElement.classList.add("hide")
+        resultsPane.classList.add("hide");
+        if (resultsPane.classList.contains("active")) {
+            resultsPane.classList.remove("active");
+            resultsTab.classList.remove("active");
+        }
+        runTab.classList.add("active");
+        runPane.classList.add("active");
+    })
+
 });
