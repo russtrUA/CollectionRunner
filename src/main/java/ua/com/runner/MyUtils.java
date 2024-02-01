@@ -192,30 +192,4 @@ public class MyUtils {
 		}
 		return true;
 	}
-//	static String[][] getVarsFromFile(String fileWithVars) throws Exception {
-//		try (BufferedReader fileReader = new BufferedReader(new FileReader(fileWithVars))) {
-//			ArrayList<String[]> linesData = new ArrayList<>();
-//
-//			String line;
-//			String[] parts;
-//			int counter = 0;
-//			int kol_vars = 0;
-//			while ((line = fileReader.readLine()) != null) {
-//				counter++;
-//				// Розділяємо рядок за розділовим знаком (наприклад, комою)
-//				parts = line.split(",");
-//				if (counter == 1) {
-//					kol_vars = parts.length;
-//				} else if (kol_vars != parts.length) {
-//					System.err.println("Wrong count of variables in the file!");
-//					throw new Exception("Wrong count of variables in the file");
-//				}
-//				// Додаємо масив частин до списку
-//				linesData.add(parts);
-//			}
-//			// Конвертуємо ArrayList у масив строк
-//			String[][] linesArray = linesData.toArray(new String[0][0]);
-//			return linesArray;
-//		}
-//	}
 }

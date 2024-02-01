@@ -2,15 +2,15 @@ package ua.com.runner;
 
 import java.io.*;
 import java.net.*;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.net.ssl.*;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -61,7 +61,7 @@ public class MyExecutorService {
 		// Виведення результатів у форматі хвилини та секунди
 		long minutes = duration.toMinutes();
 		long seconds = duration.minusMinutes(minutes).getSeconds();
-		message.append("Start Time: " + start + "\\n" + "End Time: " + end + "\\n" + "Duration: " + minutes
+		message.append("Start Time: " + ZonedDateTime.ofInstant(start, ZoneId.systemDefault()) + "\\n" + "End Time: " + ZonedDateTime.ofInstant(end, ZoneId.systemDefault()) + "\\n" + "Duration: " + minutes
 				+ " minutes and " + seconds + " seconds" + "\\n");
 		return message;
 
