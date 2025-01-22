@@ -1,11 +1,9 @@
 package ua.com.runner;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
@@ -77,9 +75,9 @@ public class RunnerController {
 			con.setConnectTimeout(10000);
 			con.setReadTimeout(10000);
 			con.connect();
-			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-				wr.writeBytes(request);
-				wr.flush();
+			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(wr, StandardCharsets.UTF_8));) {
+				writer.write(request);
 			}
 
 			int responseCode = con.getResponseCode();

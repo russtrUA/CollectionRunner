@@ -2,6 +2,7 @@ package ua.com.runner;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -184,10 +185,10 @@ public class MyExecutorService {
 						// System.out.println(request);
 						Instant startRequest = Instant.now();
 
-						
-						try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-							wr.writeBytes(request);
-							wr.flush();
+
+						try (DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+							 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(wr, StandardCharsets.UTF_8));) {
+							writer.write(request);
 						}
 
 						int responseCode = con.getResponseCode();
