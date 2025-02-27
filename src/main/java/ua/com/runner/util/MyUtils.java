@@ -1,4 +1,4 @@
-package ua.com.runner;
+package ua.com.runner.util;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 
 public class MyUtils {
-	static StringBuilder readFile(String pathToFile) {
+	public static StringBuilder readFile(String pathToFile) {
 		StringBuilder content = new StringBuilder();
 		try (BufferedReader fileReader = new BufferedReader(new FileReader(pathToFile))) {
 			String line;
@@ -47,7 +47,7 @@ public class MyUtils {
 		return content;
 	}
 
-	static boolean writeFile(String pathToFile, String content) {
+	public static boolean writeFile(String pathToFile, String content) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathToFile))) {
 			writer.write(content);
 			return true;
@@ -58,7 +58,7 @@ public class MyUtils {
 		}
 	}
 
-	static void log(String fileName, String message) {
+	public static void log(String fileName, String message) {
 		Path filePath = Paths.get(fileName);
 		Set<OpenOption> options = Set.of(StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 		// Отримуємо поточну дату та час для логу
@@ -86,7 +86,7 @@ public class MyUtils {
 		return dateFormat.format(new Date());
 	}
 
-	static String fillBody(StringBuilder body, JsonNode vars, JsonNode values)
+	public static String fillBody(StringBuilder body, JsonNode vars, JsonNode values)
 			throws JsonMappingException, JsonProcessingException {
 		body = new StringBuilder(body);
 		// fill placeholders {{VAR}}
@@ -126,14 +126,11 @@ public class MyUtils {
 			String currentDateTime = getCurrentDateTime();
 			((com.fasterxml.jackson.databind.node.ObjectNode) headerNode).put("messageDate", currentDateTime);
 		}
-
-		// Друк оновленого JSON
-//		System.out.println(objMapper.writeValueAsString(rootNode));
 		return objMapper.writeValueAsString(rootNode);
 	}
 
-	static boolean setHTTPSConnectionSettings() {
-		String pfxFilePath = null, pfxPasswordFilePath = null;
+	public static boolean setHTTPSConnectionSettings() {
+		String pfxFilePath, pfxPasswordFilePath;
 		// Вказати шлях до файлу налаштувань користувача
 		File userConfigFile = new File("user.config");
 		if (!userConfigFile.exists()) {

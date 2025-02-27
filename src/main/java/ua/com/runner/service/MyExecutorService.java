@@ -1,4 +1,4 @@
-package ua.com.runner;
+package ua.com.runner.service;
 
 import java.io.*;
 import java.net.*;
@@ -17,6 +17,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ua.com.runner.util.MyUtils;
 
 public class MyExecutorService {
 	private volatile boolean isInterrupted = false;
@@ -84,7 +85,7 @@ public class MyExecutorService {
 			e.printStackTrace();
 		}
 		logFilePath = "log_" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now()) + ".txt";
-		MyUtils.log(logFilePath, "Starting collection running. Count of requests: " + requests.size() + "; Count of iterations: " + (iterations.size() - 1) 
+		MyUtils.log(logFilePath, "Starting collection running. Count of requests: " + requests.size() + "; Count of iterations: " + (iterations.size() - 1)
 				+ "; delay: " + delay + "ms.; Count of threads:" + numThreads);
 
 		executorService = Executors.newFixedThreadPool(numThreads);
@@ -226,6 +227,16 @@ public class MyExecutorService {
 								failed.incrementAndGet();
 							}
 
+						} catch (IOException ex) {
+							Instant endRequest = Instant.now();
+							Duration duration = Duration.between(startRequest, endRequest);
+							long millis = duration.toMillis();
+							MyUtils.log(logFilePath,
+									"ERROR: " + (!arrayOfVars.isEmpty() ? arrayOfVars.get(i) : "[]") + " "
+											+ runRequest.get("method").asText() + " " + runRequest.get("url").asText()
+											+ " Request: " + request + " - " + responseCode + System.lineSeparator()
+											+ ex.getMessage() + " - " + millis + "ms.");
+							failed.incrementAndGet();
 						}
 						con.disconnect();
 						// Затримка між викликами запитів

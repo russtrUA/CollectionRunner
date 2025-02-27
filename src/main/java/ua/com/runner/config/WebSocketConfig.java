@@ -1,4 +1,4 @@
-package ua.com.runner;
+package ua.com.runner.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -23,11 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/ws-run-collection").setHandshakeHandler(new CustomHandshakeHandler()); // Set custom
-																										// handshake
-																										// handler
-		// .withSockJS() // Add Sock JS support
-		;
+		registry.addEndpoint("/ws-run-collection").setHandshakeHandler(new CustomHandshakeHandler());
 	}
 
 }

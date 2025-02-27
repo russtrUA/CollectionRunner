@@ -1,4 +1,4 @@
-package ua.com.runner;
+package ua.com.runner.controller;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -16,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import ua.com.runner.service.MyExecutorService;
+import ua.com.runner.util.MyUtils;
 
 @Controller
 public class RunnerController {

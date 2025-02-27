@@ -1,9 +1,9 @@
-package ua.com.runner;
+package ua.com.runner.config;
 
 import java.security.Principal;
 
 class StompPrincipal implements Principal {
-    private String name;
+    private final String name;
 
     StompPrincipal(String name) {
         this.name = name;
